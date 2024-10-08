@@ -72,7 +72,7 @@ class Settings
                 ]
             );
 
-            $social_media_meta_key = ['_facebook_share_type', '_twitter_share_type', '_linkedin_share_type', '_pinterest_share_type', '_linkedin_share_type_page', '_instagram_share_type'];
+            $social_media_meta_key = ['_facebook_share_type', '_twitter_share_type', '_linkedin_share_type', '_pinterest_share_type', '_linkedin_share_type_page', '_instagram_share_type', '_medium_share_type'];
             // Social media meta 
             foreach ($social_media_meta_key as $value) {
                 register_post_meta(
@@ -148,6 +148,66 @@ class Settings
                 return current_user_can( 'edit_posts' );
             }
         ));
+
+        register_rest_route($namespace,'get-categories',array(
+            'methods' => 'GET',
+            'callback'   => array($this, 'wpsp_get_categories'),
+            'permission_callback' => function() {
+                return current_user_can( 'edit_posts' );
+            }
+        ));
+    }
+
+    public function wpsp_get_categories(\WP_REST_Request $request)
+    {
+        $limit      = $request->get_param('limit') ?: 10;
+        $page       = $request->get_param('page') ?: 1;
+        $categories = $this->get_options_with_pagination($limit, $page);
+        return rest_ensure_response($categories);
+    }
+
+   /**
+     * Get categories with pagination.
+     *
+     * @param int $limit Number of items per page.
+     * @param int $page  Current page number.
+     *
+     * @return array List of categories with the desired format.
+     */
+    function get_options_with_pagination($limit, $page)
+    {
+        $allowed_post_types = \WPSP\Helper::get_all_allowed_post_type(); // Fetch allowed post types
+        $result = ['result' => []];
+        $offset = ($page - 1) * $limit;
+
+        foreach ($allowed_post_types as $post_type) {
+            $taxonomies = get_object_taxonomies($post_type); // Get taxonomies for each post type
+
+            foreach ($taxonomies as $taxonomy) {
+                $args = [
+                    'taxonomy'   => $taxonomy,
+                    'hide_empty' => false, // Include terms without posts
+                    'number'     => $limit,
+                    'offset'     => $offset,
+                ];
+
+                $terms = get_terms($args);
+
+                if (!is_wp_error($terms)) {
+                    foreach ($terms as $term) {
+                        $result['result'][] = [
+                            'term_id'  => $term->term_id,
+                            'label'    => $term->name,
+                            'slug'     => $term->slug,
+                            'taxonomy' => $term->taxonomy,
+                            'postType' => $post_type,
+                            'value'    => $post_type . '.' . $term->taxonomy . '.' . $term->slug
+                        ];
+                    }
+                }
+            }
+        }
+        return $result['result']; // Returning the 'result' key
     }
 
     // Instant social share

@@ -192,12 +192,11 @@ class Settings {
                                 'allow_categories' => [
                                     'name'     => 'allow_categories',
                                     'label'    => __('Show Categories:', 'wp-scheduled-posts'),
-                                    'type'     => 'checkbox-select',
+                                    'type'     => 'checkbox-select-async',
                                     'multiple' => true,
                                     'default'  => [ 'all' ],
                                     'priority' => 8,
                                     'icon_classes'  => 'wpsp-icon wpsp-close',
-                                    'option'  => self::normalize_options(\WPSP\Helper::_get_all_category()),
                                 ],
                                 'allow_user_by_role' => [
                                     'name'     => 'allow_user_by_role',
@@ -268,6 +267,16 @@ class Settings {
                                     'label'    => __('Show Scheduled Posts in Elementor', 'wp-scheduled-posts'),
                                     'priority' => 25,
                                     'default'  => 1,
+                                ],
+                                'show_elementor_section_schedule' => [
+                                    'name'        => 'show_elementor_section_schedule',
+                                    'type'        => 'toggle',
+                                    'label'       => __('Show Elementor Section Schedule', 'wp-scheduled-posts'),
+                                    'priority'    => 26,
+                                    'default'     => false,
+                                    'info'        => __('Schedule any Section of a Page/Post in Elementor with SchedulePress','wp-scheduled-posts'),
+                                    'description' => __('Upgrade to Premium', 'wp-scheduled-posts'),
+                                    'is_pro'      => true,
                                 ],
                                 'post_republish_unpublish' => [
                                     'name'        => 'post_republish_unpublish',
@@ -559,6 +568,21 @@ class Settings {
                                         'desc'               => sprintf( __('For details on Instagram configuration, check out this <a href="%s" target="_blank">Doc</a>.<br> <a href="%s" target="_blank">Click here</a> to Retrieve Your API Keys from your Instagram account.','wp-scheduled-posts'), 'https://wpdeveloper.com/docs/share-scheduled-wordpress-posts-on-instagram/','https://developers.facebook.com/' ),
                                     ],
                                     'priority' => 25,
+                                ],
+                                'medium_profile_list'  => [
+                                    'id'       => 'medium_profile_list',
+                                    'name'     => 'medium_profile_list',
+                                    'type'     => 'medium',
+                                    'label'    => __('Medium', 'wp-scheduled-posts'),
+                                    'default'  => [],
+                                    'logo'     => WPSP_ASSETS_URI . 'images/medium.svg',
+                                    'desc'     => sprintf( __('You can enable/disable Medium social share. To configure Medium Social Profile, check out this <a target="__blank" href="%s">Doc</a>','wp-scheduled-posts'), 'https://wpdeveloper.com/docs/automatically-share-wordpress-posts-on-medium/' ),
+                                    'modal'    => [
+                                        'logo'               => WPSP_ASSETS_URI . 'images/medium.svg',
+                                        'redirect_url_desc'  => __('Add this URL in the Redirect URLs field of your Medium app.','wp-scheduled-posts'),
+                                        'desc'               => sprintf( __('For details on Medium configuration, check out this <a href="%s" target="_blank">Doc</a>.<br> <a href="%s" target="_blank">Click here</a> to Retrieve Your API Keys from your Medium account.','wp-scheduled-posts'), 'https://wpdeveloper.com/docs/share-scheduled-wordpress-posts-on-instagram/','https://medium.com/me/settings/security/' ),
+                                    ],
+                                    'priority' => 30,
                                 ],
                             ]
                         ]
@@ -1056,6 +1080,87 @@ class Settings {
                                                                 ],
                                                                 'post_share_limit'  => [
                                                                     'id'            => 'instagram_post_share_limit',
+                                                                    'name'          => 'post_share_limit',
+                                                                    'type'          => 'number',
+                                                                    'label'         => __('How often to share a post?', 'wp-scheduled-posts'),
+                                                                    'priority'      => 21,
+                                                                    'default'       => 0,
+                                                                    'help'          => __('Keep zero for no limit', 'wp-scheduled-posts'),
+                                                                ],
+                                                            ]
+                                                        ]
+
+                                                    ]
+                                                ]
+                                            ]
+                                        ],
+                                        'layouts_medium'  => [
+                                            'id'            => 'layouts_medium',
+                                            'name'          => 'layouts_medium',
+                                            'label'         => __('Medium', 'wp-scheduled-posts'),
+                                            'priority'      => 40,
+                                            'fields'        => [
+                                                'medium_wrapper'     => [
+                                                    'id'            => 'medium_wrapper',
+                                                    'type'          => 'section',
+                                                    'name'          => 'medium_wrapper',
+                                                    'label'         => __('Medium Settings', 'wp-scheduled-posts'),
+                                                    'sub_title'     => sprintf( __('To configure the Medium Settings, check out this <a target="_blank" href="%s">Doc.</a>','wp-scheduled-posts'), 'https://wpdeveloper.com/docs/automatically-share-wordpress-posts-on-medium/' ),
+                                                    'priority'      => 10,
+                                                    'fields'        => [
+                                                        'medium'  => [
+                                                            'name'     => "medium",
+                                                            'parent'     => "social_templates",
+                                                            'type'     => "group",
+                                                            'priority' => 10,
+                                                            'fields'    => [
+                                                                'is_category_as_tags'  => [
+                                                                    'id'            => 'medium_cat_tags',
+                                                                    'name'          => 'is_category_as_tags',
+                                                                    'type'          => 'toggle',
+                                                                    'label'         => __('Add Category as tags', 'wp-scheduled-posts'),
+                                                                    'info'          => __('The categories you select will be used as tags.','wp-scheduled-posts'),
+                                                                    'priority'      => 10,
+                                                                    'default'       => true,
+                                                                ],
+                                                                'content_source' => [
+                                                                    'label'         => __('Content Source:','wp-scheduled-posts'),
+                                                                    'name'          => "content_source",
+                                                                    'type'          => "radio-card",
+                                                                    'default'       => "excerpt",
+                                                                    'priority'      => 11,
+                                                                    'options' => [
+                                                                        [
+                                                                            'label' => __( 'Excerpt','wp-scheduled-posts' ),
+                                                                            'value' => 'excerpt',
+                                                                        ],
+                                                                        [
+                                                                            'label' => __( 'Content','wp-scheduled-posts' ),
+                                                                            'value' => 'content',
+                                                                        ],
+                                                                    ],
+                                                                ],
+                                                                'template_structure'  => [
+                                                                    'id'            => 'template_structure',
+                                                                    'name'          => 'template_structure',
+                                                                    'type'          => 'text',
+                                                                    'label'         => __('Status Template Settings', 'wp-scheduled-posts'),
+                                                                    'info'          => __( 'Define how to share the content on Instagram by setting the template. <strong>Default Structure: {title}{content}{url}{tags}</strong>','wp-scheduled-posts' ),
+                                                                    'default'       => '{title}{content}{url}{tags}',
+                                                                    'priority'      => 15,
+                                                                ],
+                                                                'note_limit'  => [
+                                                                    'id'            => 'medium_note_limit',
+                                                                    'name'          => 'note_limit',
+                                                                    'type'          => 'number',
+                                                                    'label'         => __('Status Limit', 'wp-scheduled-posts'),
+                                                                    'priority'      => 20,
+                                                                    'default'       => '5000',
+                                                                    'max'           => '5000',
+                                                                    'help'          => __('Max: 5000', 'wp-scheduled-posts'),
+                                                                ],
+                                                                'post_share_limit'  => [
+                                                                    'id'            => 'medium_post_share_limit',
                                                                     'name'          => 'post_share_limit',
                                                                     'type'          => 'number',
                                                                     'label'         => __('How often to share a post?', 'wp-scheduled-posts'),
