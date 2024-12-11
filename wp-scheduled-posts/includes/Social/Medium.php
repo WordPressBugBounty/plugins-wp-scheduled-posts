@@ -102,11 +102,15 @@ class Medium
         $post = get_post($post_id);
         // Retrieve the post content and other necessary fields
         $title = get_the_title($post_id);
-        
+        $title = sanitize_text_field(html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         if ($this->content_source === 'excerpt' && has_excerpt($post->ID)) {
             $content = wp_strip_all_tags($post->post_excerpt);
         } else {
             $content = apply_filters('the_content', $post->post_content);
+            if( is_visual_composer_post($post_id) && class_exists('WPBMap') ){
+                \WPBMap::addAllMappedShortcodes();
+                $content = do_shortcode($content);
+            }
         }
 
         $canonical_url = get_permalink($post_id);
@@ -154,7 +158,7 @@ class Medium
         $data = [
             'title'         => $title,
             'contentFormat' => 'html',
-            'content'       => $formatedText,
+            'content'       => '<h1>'.$title.'</h1>' . $formatedText,
             'canonicalUrl'  => $canonical_url,
             'tags'          => $tags,
             'publishStatus' => 'public'
