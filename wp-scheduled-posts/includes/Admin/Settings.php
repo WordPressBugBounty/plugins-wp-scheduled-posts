@@ -21,8 +21,47 @@ class Settings {
     public function load_dependency() {
         new Settings\Assets($this->slug, $this);
         add_action('wpsp_save_settings_default_value', array($this, 'save_option_value'));
+        add_filter('wpsp_settings_before_save', [$this, 'wpsp_update_settings']);
     }
 
+    public function wpsp_update_settings($settings)
+    {
+        $limits = [
+            'facebook' => [
+                'status_limit' => 63206,
+            ],
+            'twitter' => [
+                'tweet_limit' => 280,
+            ],
+            'linkedin' => [
+                'status_limit' => 1300,
+            ],
+            'pinterest' => [
+                'note_limit' => 500,
+            ],
+            'instagram' => [
+                'note_limit' => 2100,
+            ],
+            'medium' => [
+                'note_limit' => 45000,
+            ],
+            'threads' => [
+                'note_limit' => 480,
+            ],
+        ];
+        foreach ($limits as $platform => $platform_limits) {
+            if (isset($settings['social_templates'][$platform]) && is_array($settings['social_templates'][$platform])) {
+                foreach ($platform_limits as $key => $limit) {
+                    if (isset($settings['social_templates'][$platform][$key]) && $settings['social_templates'][$platform][$key] > $limit) {
+                        $settings['social_templates'][$platform][$key] = $limit;
+                    }
+                }
+            }
+        }
+        return $settings;
+    }
+    
+    
     /**
      * Convert `fields` associative array to numeric array recursively.
      * @todo improve implementation.
@@ -305,6 +344,51 @@ class Settings {
                                     'priority'    => 35,
                                     'default'     => true,
                                     'is_pro'      => true,
+                                ],
+                                'post_publishing_and_sharing_option' => [
+                                    'name'          => 'post_publishing_and_sharing_option',
+                                    'type'          => 'section',
+                                    'label'         => __('Enhanced Post Publishing and Sharing Options:', 'wp-scheduled-posts'),
+                                    'collapsible'   => true,
+                                    'collapsed'     => false,
+                                    'classes'       => 'section-collapsible',
+                                    'default'       => 1,
+                                    'priority'      => 40,
+                                    'fields'        => [
+                                        'set_future_date_on_post_publish' => [
+                                            'name'        => 'set_future_date_on_post_publish',
+                                            'type'        => 'toggle',
+                                            'label'       => __('Publish Now with Future Date', 'wp-scheduled-posts'),
+                                            'description' => __('Upgrade to Premium', 'wp-scheduled-posts'),
+                                            'info'        => __('Toggle to enable the option to publish the post now while showing your selected future date.', 'wp-scheduled-posts'),
+                                            'priority'    => 10,
+                                            'default'     => false,
+                                            'is_pro'      => true,
+                                        ],
+                                        'is_share_on_post_publish' => [
+                                            'name'        => 'is_share_on_post_publish',
+                                            'type'        => 'toggle',
+                                            'label'       => __('Auto-Share upon Publishing', 'wp-scheduled-posts'),
+                                            'description' => __('Upgrade to Premium', 'wp-scheduled-posts'),
+                                            'priority'    => 20,
+                                            'default'     => false,
+                                            'is_pro'      => true,
+                                        ],
+                                        'allow_post_type_for_future_date_and_published_share'  => [
+                                            'name'     => 'allow_post_type_for_future_date_and_published_share',
+                                            'label'    => __('Show Post Types:', 'wp-scheduled-posts'),
+                                            'type'     => 'checkbox-select',
+                                            'multiple' => true,
+                                            'priority' => 55,
+                                            'icon_classes'  => 'wpsp-icon wpsp-close',
+                                            'option'  => self::normalize_options(\WPSP\Helper::get_all_post_type()),
+                                            'default'  => [ 'post' ],
+                                            'rules'       => Rules::logicalRule([
+                                                Rules::is( 'set_future_date_on_post_publish', true ),
+                                                Rules::is( 'is_share_on_post_publish', true ),
+                                            ], 'OR'),
+                                        ],
+                                    ]
                                 ],
                             ],
                         ],

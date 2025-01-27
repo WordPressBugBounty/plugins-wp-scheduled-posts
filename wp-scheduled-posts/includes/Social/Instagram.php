@@ -115,7 +115,7 @@ class Instagram
         }
 
 
-        $hashTags = (($this->getPostHasTags($post_id) != false) ? $this->getPostHasTags($post_id) : '');
+        $hashTags = (($this->getPostHasTags($post_id, 'instagram', $this->is_category_as_tags) != false) ? $this->getPostHasTags($post_id, 'instagram', $this->is_category_as_tags) : '');
         if ($this->is_category_as_tags == true) {
             $hashTags .= ' ' . $this->getPostHasCats($post_id);
         }
@@ -308,9 +308,12 @@ class Instagram
      * @since 2.5.0
      * @return ajax response
      */
-    public function socialMediaInstantShare($app_id, $app_secret, $app_access_token, $type, $ID, $post_id, $profile_key)
+    public function socialMediaInstantShare($app_id, $app_secret, $app_access_token, $type, $ID, $post_id, $profile_key,$is_share_on_publish)
     {
         $response = $this->remote_post($app_id, $app_secret, $app_access_token, $type, $ID, $post_id, $profile_key, true);
+        if( $is_share_on_publish ) {
+            return;
+        }
         if ($response['success'] == false) {
             wp_send_json_error($response['log']);
         } else {

@@ -214,6 +214,7 @@ class Helper
     {
         global $current_user;
         $allow_user_by_role = \WPSP\Helper::get_settings('allow_user_by_role');
+        if (empty($current_user->ID)) return false;
         $allow_user_by_role = (is_array($allow_user_by_role) && count($allow_user_by_role) > 0) ? $allow_user_by_role : array('administrator');
         if ( is_super_admin($current_user->ID) ) return true;
         if (!is_array($current_user->roles)) return false;
@@ -560,6 +561,24 @@ class Helper
         $cleaned_content = preg_replace('/(\s*\n\s*)+/', "\n", $cleaned_content);
         $cleaned_content = trim($cleaned_content);
         return $cleaned_content;
+    }
+
+
+     /**
+     * Retrieves the meta data.
+     *
+     * @return array Selected social profiles or an empty array.
+     */
+    public static function get_featured_image_id_from_request()
+    {
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            $raw_input = file_get_contents('php://input');
+            $decoded_input = json_decode($raw_input, true);
+
+            return $decoded_input['featured_media'];
+        }
+
+        return null;
     }
 
 }
