@@ -231,11 +231,16 @@ class Helper
 
     public static function get_settings($key)
     {
-        global $wpsp_settings_v5;
+        $wpsp_settings_v5 = json_decode(get_option(WPSP_SETTINGS_NAME, '{}'));
         if (isset($wpsp_settings_v5->{$key})) {
             return $wpsp_settings_v5->{$key};
         }
         return;
+    }
+
+    public static function wpsp_settings_v5()
+    {
+        return json_decode(get_option(WPSP_SETTINGS_NAME, '{}'));
     }
 
     /**
@@ -353,7 +358,7 @@ class Helper
 
 
     public static function update_access_token( $type, $platformKey, $access_token ) {
-        global $wpsp_settings_v5;
+        $wpsp_settings_v5 = self::wpsp_settings_v5();
         $platformOptions = [
             'facebook'  => WPSCP_FACEBOOK_OPTION_NAME,
             'twitter'   => WPSCP_TWITTER_OPTION_NAME,
@@ -379,7 +384,7 @@ class Helper
      */
     public static function get_access_token($type, $platformKey, $access_token = null)
     {
-        global $wpsp_settings_v5;
+        $wpsp_settings_v5 = self::wpsp_settings_v5();
         $token        = [];
         $platformOptions = [
             'facebook'  => WPSCP_FACEBOOK_OPTION_NAME,
@@ -420,7 +425,7 @@ class Helper
      */
     public static function get_profiles($type)
     {
-        global $wpsp_settings_v5;
+        $wpsp_settings_v5 = self::wpsp_settings_v5();
         $platformOptions = [
             'facebook'  => WPSCP_FACEBOOK_OPTION_NAME,
             'twitter'   => WPSCP_TWITTER_OPTION_NAME,
@@ -579,6 +584,17 @@ class Helper
         }
 
         return null;
+    }
+
+     // Function to clean and render WordPress block content
+     public static function format_post_content($post_id) {
+        // Get the post content
+        $content = get_the_content(null, false, $post_id);
+        $content = apply_filters('the_content', $content);
+        $content = str_replace(['<br>', '<br />'], "\n", $content);
+        $content = str_replace(['</p>', '</div>', '</li>', '</ul>', '</ol>'], "\n", $content);
+        $plain_text = strip_tags($content);
+        return trim($plain_text);
     }
 
 }
