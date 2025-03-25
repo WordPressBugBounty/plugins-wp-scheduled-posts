@@ -15,6 +15,7 @@ class Linkedin
     private $template_structure;
     private $status_limit;
     private $post_share_limit;
+    private $remove_css_from_content;
 
     public function __construct()
     {
@@ -26,6 +27,7 @@ class Linkedin
         $this->template_structure = (isset($settings['template_structure']) ? $settings['template_structure'] : '{title}{content}{url}{tags}');
         $this->status_limit = (isset($settings['status_limit']) ? $settings['status_limit'] : 1300);
         $this->post_share_limit = (isset($settings['post_share_limit']) ? $settings['post_share_limit'] : 0);
+        $this->remove_css_from_content = (isset($settings['remove_css_from_content']) ? $settings['remove_css_from_content'] : true);
     }
 
     public function instance()
@@ -127,7 +129,9 @@ class Linkedin
             $this->filter_little_text($desc),
             $post_link,
             $hashTags,
-            $this->status_limit
+            $this->status_limit,
+            null,
+            'linkedin'
         );
         return $formatedText;
     }
@@ -351,4 +355,6 @@ class Linkedin
             wp_send_json_success($response['log']);
         }
     }
+
+
 }

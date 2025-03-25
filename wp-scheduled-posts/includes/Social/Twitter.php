@@ -16,6 +16,7 @@ class Twitter
     private $content_source;
     private $tweet_limit;
     private $post_share_limit;
+    private $remove_css_from_content;
 
     public function __construct()
     {
@@ -28,6 +29,7 @@ class Twitter
         $this->tweet_limit = (isset($settings['tweet_limit']) ? $settings['tweet_limit'] : 280);
         $this->post_share_limit = (isset($settings['post_share_limit']) ? $settings['post_share_limit'] : 0);    
         add_filter('wpsp_filter_social_content_tags', [ $this, 'wpsp_limit_twitter_tags' ], 10, 2);
+        $this->remove_css_from_content = (isset($settings['remove_css_from_content']) ? $settings['remove_css_from_content'] : true);
     }
 
     public function wpsp_limit_twitter_tags( $tags, $platform ) {

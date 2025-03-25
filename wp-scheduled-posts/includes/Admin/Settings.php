@@ -757,13 +757,13 @@ class Settings {
                                                                     'label'         => __('Facebook Meta Data', 'wp-scheduled-posts'),
                                                                     'info'          => __('Add Open Graph metadata to your site head section and other social networks use this data when your pages are shared.', 'wp-scheduled-posts'),
                                                                     'priority'      => 5,
-                                                                    'default'       => false,
+                                                                    'default'       => true,
                                                                 ],
                                                                 'content_type' => [
                                                                     'label'   => __('Content Type:','wp-scheduled-posts'),
                                                                     'name'    => "content_type",
                                                                     'type'    => "radio-card",
-                                                                    'default' => "link",
+                                                                    'default' => "statuswithlink",
                                                                     'priority'=> 6,
                                                                     'options' => [
                                                                         [
@@ -833,6 +833,14 @@ class Settings {
                                                                     'priority'      => 21,
                                                                     'default'       => 0,
                                                                     'help'          => __('Keep zero for no limit', 'wp-scheduled-posts'),
+                                                                ],
+                                                                'remove_css_from_content'  => [
+                                                                    'id'            => 'facebook_remove_css_from_content',
+                                                                    'name'          => 'remove_css_from_content',
+                                                                    'type'          => 'toggle',
+                                                                    'label'         => __('Remove CSS from content', 'wp-scheduled-posts'),
+                                                                    'priority'      => 30,
+                                                                    'default'       => true,
                                                                 ],
                                                             ]
                                                         ]
@@ -923,6 +931,14 @@ class Settings {
                                                                     'default'       => 0,
                                                                     'help'          => __('Keep zero for no limit', 'wp-scheduled-posts'),
                                                                 ],
+                                                                // 'remove_css_from_content'  => [
+                                                                //     'id'            => 'twitter_remove_css_from_content',
+                                                                //     'name'          => 'remove_css_from_content',
+                                                                //     'type'          => 'toggle',
+                                                                //     'label'         => __('Remove CSS from content', 'wp-scheduled-posts'),
+                                                                //     'priority'      => 30,
+                                                                //     'default'       => true,
+                                                                // ],
                                                             ]
                                                         ]
 
@@ -1025,6 +1041,14 @@ class Settings {
                                                                     'default'       => 0,
                                                                     'help'          => __('Keep zero for no limit', 'wp-scheduled-posts'),
                                                                 ],
+                                                                // 'remove_css_from_content'  => [
+                                                                //     'id'            => 'linkedin_remove_css_from_content',
+                                                                //     'name'          => 'remove_css_from_content',
+                                                                //     'type'          => 'toggle',
+                                                                //     'label'         => __('Remove CSS from content', 'wp-scheduled-posts'),
+                                                                //     'priority'      => 30,
+                                                                //     'default'       => true,
+                                                                // ],
                                                             ]
                                                         ]
 
@@ -1115,6 +1139,14 @@ class Settings {
                                                                     'default'       => 0,
                                                                     'help'          => __('Keep zero for no limit', 'wp-scheduled-posts'),
                                                                 ],
+                                                                // 'remove_css_from_content'  => [
+                                                                //     'id'            => 'pinterest_remove_css_from_content',
+                                                                //     'name'          => 'remove_css_from_content',
+                                                                //     'type'          => 'toggle',
+                                                                //     'label'         => __('Remove CSS from content', 'wp-scheduled-posts'),
+                                                                //     'priority'      => 30,
+                                                                //     'default'       => true,
+                                                                // ],
                                                             ]
                                                         ]
 
@@ -1195,6 +1227,14 @@ class Settings {
                                                                     'priority'      => 21,
                                                                     'default'       => 0,
                                                                     'help'          => __('Keep zero for no limit', 'wp-scheduled-posts'),
+                                                                ],
+                                                                'remove_css_from_content'  => [
+                                                                    'id'            => 'instagram_remove_css_from_content',
+                                                                    'name'          => 'remove_css_from_content',
+                                                                    'type'          => 'toggle',
+                                                                    'label'         => __('Remove CSS from content', 'wp-scheduled-posts'),
+                                                                    'priority'      => 30,
+                                                                    'default'       => true,
                                                                 ],
                                                             ]
                                                         ]
@@ -1277,6 +1317,14 @@ class Settings {
                                                                     'default'       => 0,
                                                                     'help'          => __('Keep zero for no limit', 'wp-scheduled-posts'),
                                                                 ],
+                                                                // 'remove_css_from_content'  => [
+                                                                //     'id'            => 'medium_remove_css_from_content',
+                                                                //     'name'          => 'remove_css_from_content',
+                                                                //     'type'          => 'toggle',
+                                                                //     'label'         => __('Remove CSS from content', 'wp-scheduled-posts'),
+                                                                //     'priority'      => 30,
+                                                                //     'default'       => true,
+                                                                // ],
                                                             ]
                                                         ]
 
@@ -1358,6 +1406,14 @@ class Settings {
                                                                     'default'       => 0,
                                                                     'help'          => __('Keep zero for no limit', 'wp-scheduled-posts'),
                                                                 ],
+                                                                // 'remove_css_from_content'  => [
+                                                                //     'id'            => 'threads_remove_css_from_content',
+                                                                //     'name'          => 'remove_css_from_content',
+                                                                //     'type'          => 'toggle',
+                                                                //     'label'         => __('Remove CSS from content', 'wp-scheduled-posts'),
+                                                                //     'priority'      => 30,
+                                                                //     'default'       => true,
+                                                                // ],
                                                             ]
                                                         ]
                                                     ]

@@ -587,10 +587,13 @@ class Helper
     }
 
      // Function to clean and render WordPress block content
-     public static function format_post_content($post_id) {
+     public static function format_post_content($post_id, $remove_css = false) {
         // Get the post content
         $content = get_the_content(null, false, $post_id);
         $content = apply_filters('the_content', $content);
+        if( $remove_css ) {
+            $content = preg_replace('/<style.*?>.*?<\/style>/is', '', $content);
+        }
         $content = str_replace(['<br>', '<br />'], "\n", $content);
         $content = str_replace(['</p>', '</div>', '</li>', '</ul>', '</ol>'], "\n", $content);
         $plain_text = strip_tags($content);
