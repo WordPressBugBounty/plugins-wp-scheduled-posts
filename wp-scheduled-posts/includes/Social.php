@@ -2,6 +2,7 @@
 
 namespace WPSP;
 
+use WPSP\Social\ReconnectHandler;
 use myPHPNotes\LinkedIn;
 use DirkGroenen\Pinterest\Pinterest;
 use WPSP\Social\SocialReconnection;
@@ -10,6 +11,8 @@ class Social
 {
     protected $social_profile;
     protected $instantShare;
+    protected $reconnect_handler;
+
     public function __construct()
     {
         $this->define_constants();
@@ -36,7 +39,7 @@ class Social
         $this->define('WPSCP_THREADS_OPTION_NAME', 'threads_profile_list');
         // $this->define('WPSCP_FACEBOOK_SCOPE', 'pages_show_list,publish_to_groups,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_posts,pages_manage_engagement');
         $this->define('WPSCP_FACEBOOK_SCOPE', 'pages_show_list,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_posts,business_management,');
-        $this->define('WPSCP_INSTAGRAM_SCOPE', 'pages_show_list,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_posts,business_management,ads_management,instagram_basic,instagram_content_publish,');
+        $this->define('WPSCP_INSTAGRAM_SCOPE', 'instagram_business_basic,instagram_business_content_publish,');
         // twitter
         $this->define('WPSCP_TWITTER_OPTION_NAME', 'twitter_profile_list');
         // linkedin
@@ -64,6 +67,9 @@ class Social
     public function load_dependancy()
     {
         $this->socialProfile();
+
+        // Social profile reconnection process handler
+        new ReconnectHandler;
         new SocialReconnection();
     }
     public function socialProfile() {
