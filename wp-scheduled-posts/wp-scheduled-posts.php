@@ -2,7 +2,7 @@
 /*
  * Plugin Name: SchedulePress
  * Description: Automate your content workflow with SchedulePress. Take a quick glance at your content planning with Schedule Calendar, Dashboard widget & Sitewide admin bar. Instantly share your posts on social media platforms such as Facebook, Twitter & many more.
- * Version: 5.2.9
+ * Version: 5.2.10
  * Author: WPDeveloper
  * Author URI: https://wpdeveloper.com
  * Text Domain: wp-scheduled-posts
@@ -61,6 +61,23 @@ final class WPSP
 		add_action('wp_loaded', [$this, 'run_migrator']);
 		add_action('init', [$this, 'load_calendar']);
 		add_filter('jwt_auth_whitelist', array($this, 'whitelist_API'));
+
+	    // init plugin updater with version check
+	    if ( defined( 'WPSP_PRO_VERSION' ) && version_compare( WPSP_PRO_VERSION, '5.1.3', '>=' ) && version_compare( WPSP_PRO_VERSION, '5.2.0', '<=' ) ) {
+		    add_action( 'init', [ $this, 'wpsp_init_plugin_updater' ], 99 );
+	    }
+	}
+
+	/**
+     * Initialize plugin updater
+     *
+     * @since 5.2.9
+     */
+	function wpsp_init_plugin_updater() {
+		if ( is_admin() ) {
+			$license_manager = \WPSP_PRO\Dependencies\WPDeveloper\Licensing\LicenseManager::get_instance( [] );
+			$license_manager->plugin_updater();
+		}
 	}
 
 	public static function init()
@@ -78,7 +95,7 @@ final class WPSP
 		/**
 		 * Defines CONSTANTS for Whole plugins.
 		 */
-		define('WPSP_VERSION', '5.2.9');
+		define('WPSP_VERSION', '5.2.10');
 		define('WPSP_SETTINGS_NAME_OLD', 'wpsp_settings');
 		define('WPSP_SETTINGS_NAME', 'wpsp_settings_v5');
 		define('WPSP_PLUGIN_FILE', __FILE__);
