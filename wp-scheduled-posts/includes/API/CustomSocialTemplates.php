@@ -47,6 +47,7 @@ class CustomSocialTemplates
         // Dynamic scheduling hooks
         // add_action('transition_post_status', array($this, 'handle_post_status_change'), 10, 3);
         add_action('post_updated', array($this, 'handle_post_update'), 10, 3);
+        add_action('wpsp_custom_social_template', array($this, 'handle_social_scheduling_published'), 99, 1);
     }
 
     /**
@@ -196,6 +197,30 @@ class CustomSocialTemplates
         }
     }
 
+    /**
+     * Reset social scheduling after cron event executed
+     *
+     * @param int $post_id
+     */
+    public function handle_social_scheduling_published($post_id) {
+        if (empty($post_id) || !get_post($post_id)) {
+            return;
+        }
+
+        $scheduling_data = get_post_meta($post_id, '_wpsp_social_scheduling', true);
+        if (empty($scheduling_data) || !is_array($scheduling_data)) {
+            return;
+        }
+
+        // Only reset if any scheduling was active
+        if ( !empty($scheduling_data['customTime']) || !empty($scheduling_data['timeOption']) ) {
+            $scheduling_data['customTime'] = '';
+            $scheduling_data['timeOption'] = 'in_1h';
+            $default_scheduling = $this->normalize_scheduling_data($scheduling_data, get_post_status($post_id));
+            update_post_meta($post_id, '_wpsp_social_scheduling', $default_scheduling);
+        }
+    }
+
 
     /**
      * Register custom template REST API routes
@@ -275,6 +300,32 @@ class CustomSocialTemplates
             ),
         ));
 
+
+        // Save social settings (Disable social share, custom banner)
+        register_rest_route($namespace, 'social-settings/(?P<post_id>\d+)', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'save_social_settings'),
+            'permission_callback' => function() {
+                return current_user_can( 'edit_posts' );
+            },
+            'args' => array(
+                'post_id' => array(
+                    'required' => true,
+                    'validate_callback' => function($param, $request, $key) {
+                        return is_numeric($param);
+                    }
+                ),
+                'disable_social_share' => array(
+                    'required' => false,
+                    'type' => 'boolean'
+                ),
+                'social_banner_id' => array(
+                    'required' => false,
+                    'type' => ['integer', 'string', 'null']
+                ),
+            ),
+        ));
+
     }
 
     /**
@@ -295,6 +346,9 @@ class CustomSocialTemplates
 
         // Get templates
         $templates = $this->get_simple_templates($post_id);
+        $saved_scheduling = get_post_meta($post_id, '_wpsp_social_scheduling', true);
+        $scheduling = $this->normalize_scheduling_data($saved_scheduling, get_post_status($post_id));
+        $templates['scheduling'] = $scheduling;
 
         return new \WP_REST_Response(array(
             'success' => true,
@@ -369,19 +423,38 @@ class CustomSocialTemplates
 
         // Update custom templates post meta
         $template_updated = update_post_meta($post_id, '_wpsp_custom_templates', $templates);
+        // global default template.
+        $has_custom_template = false;
+        if (is_array($templates)) {
+            foreach ($templates as $platform_entry) {
+                if (!is_array($platform_entry)) {
+                    continue;
+                }
+                $tpl     = isset($platform_entry['template']) ? trim((string) $platform_entry['template']) : '';
+                $profs   = isset($platform_entry['profiles']) && is_array($platform_entry['profiles']) ? $platform_entry['profiles'] : [];
+                $global  = !empty($platform_entry['is_global']);
+                if ($tpl !== '' || !empty($profs) || $global) {
+                    $has_custom_template = true;
+                    break;
+                }
+            }
+        }
+        update_post_meta($post_id, '_wpsp_enable_custom_social_template', $has_custom_template);
 
         // Handle scheduling data
         $scheduling_updated = false;
         if (is_array($scheduling_data)) {
-            $scheduling_updated = update_post_meta($post_id, '_wpsp_social_scheduling', $scheduling_data);
+            $normalized_scheduling_data = $this->normalize_scheduling_data($scheduling_data, get_post_status($post_id));
+            $scheduling_updated = update_post_meta($post_id, '_wpsp_social_scheduling', $normalized_scheduling_data);
             $template_updated = true;
             // get status of post from request
             if (get_post_status($post_id) === 'publish') {
-                $this->handle_published_post_scheduling($post_id, $scheduling_data);
+                $this->handle_published_post_scheduling($post_id, $normalized_scheduling_data);
             } elseif ( get_post_status($post_id)  === 'future') {
                 // For scheduled posts, calculate the social media timing based on the post's scheduled publication date
-                $this->handle_scheduled_post_scheduling($post_id, $scheduling_data);
+                $this->handle_scheduled_post_scheduling($post_id, $normalized_scheduling_data);
             }
+            $scheduling_data = $normalized_scheduling_data;
         }
 
         if ($template_updated !== false || $scheduling_updated !== false) {
@@ -405,6 +478,53 @@ class CustomSocialTemplates
                 'message' => __('Failed to save template and/or scheduling.', 'wp-scheduled-posts')
             ), 500);
         }
+    }
+
+    /**
+     * Save social settings for a post
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response
+     */
+    public function save_social_settings( $request ) {
+        $post_id = $request->get_param('post_id');
+        $disable_social_share = $request->get_param('disable_social_share');
+        $social_banner_id = $request->get_param('social_banner_id');
+
+        // Verify post exists and user can edit it
+        if (!get_post($post_id) || !current_user_can('edit_post', $post_id)) {
+            return new \WP_REST_Response(array(
+                'success' => false,
+                'message' => __('Post not found or insufficient permissions.', 'wp-scheduled-posts')
+            ), 403);
+        }
+
+        $updated = false;
+
+        // Process disable social share setting
+        if ($disable_social_share !== null) {
+            update_post_meta($post_id, '_wpscppro_dont_share_socialmedia', $disable_social_share);
+            $updated = true;
+        }
+
+        // Process social banner setting
+        // Null means remove, empty string also removes, valid ID updates
+        if ($social_banner_id !== null) {
+            update_post_meta($post_id, '_wpscppro_custom_social_share_image', $social_banner_id);
+            $updated = true;
+        }
+
+        if ($updated) {
+            return new \WP_REST_Response(array(
+                'success' => true,
+                'message' => __('Social settings saved successfully.', 'wp-scheduled-posts'),
+            ), 200);
+        }
+
+        return new \WP_REST_Response(array(
+            'success' => true,
+            'message' => __('No changes made to social settings.', 'wp-scheduled-posts')
+        ), 200);
     }
 
     /**
@@ -647,6 +767,56 @@ class CustomSocialTemplates
         }
 
         return $final_templates;
+    }
+
+    /**
+     * Normalize and sanitize scheduling payload before persistence/use.
+     *
+     * @param mixed  $scheduling_data Raw scheduling data.
+     * @param string $post_status Current post status.
+     * @return array
+     */
+    private function normalize_scheduling_data($scheduling_data, $post_status = 'publish') {
+        $is_published = ($post_status === 'publish');
+
+        $defaults = array(
+            'enabled'        => false,
+            'datetime'       => null,
+            'platforms'      => array(),
+            'status'         => 'template_only',
+            'dateOption'     => $is_published ? 'today' : 'same_day',
+            'timeOption'     => $is_published ? 'now' : 'in_1h',
+            'customDays'     => '',
+            'customHours'    => '',
+            'customDate'     => '',
+            'customTime'     => '',
+            'schedulingType' => $is_published ? 'absolute' : 'relative',
+        );
+
+        if (!is_array($scheduling_data)) {
+            return $defaults;
+        }
+
+        $normalized = wp_parse_args($scheduling_data, $defaults);
+
+        $normalized['enabled'] = !empty($normalized['enabled']);
+        $normalized['datetime'] = !empty($normalized['datetime']) ? sanitize_text_field($normalized['datetime']) : null;
+        $normalized['status'] = !empty($normalized['status']) ? sanitize_text_field($normalized['status']) : $defaults['status'];
+        $normalized['dateOption'] = !empty($normalized['dateOption']) ? sanitize_text_field($normalized['dateOption']) : $defaults['dateOption'];
+        $normalized['timeOption'] = !empty($normalized['timeOption']) ? sanitize_text_field($normalized['timeOption']) : $defaults['timeOption'];
+        $normalized['customDays'] = isset($normalized['customDays']) ? sanitize_text_field((string) $normalized['customDays']) : '';
+        $normalized['customHours'] = isset($normalized['customHours']) ? sanitize_text_field((string) $normalized['customHours']) : '';
+        $normalized['customDate'] = isset($normalized['customDate']) ? sanitize_text_field((string) $normalized['customDate']) : '';
+        $normalized['customTime'] = isset($normalized['customTime']) ? sanitize_text_field((string) $normalized['customTime']) : '';
+        $normalized['schedulingType'] = !empty($normalized['schedulingType']) ? sanitize_text_field($normalized['schedulingType']) : $defaults['schedulingType'];
+
+        if (!is_array($normalized['platforms'])) {
+            $normalized['platforms'] = array();
+        } else {
+            $normalized['platforms'] = array_values(array_filter(array_map('sanitize_text_field', $normalized['platforms'])));
+        }
+
+        return $normalized;
     }
 
     /**
