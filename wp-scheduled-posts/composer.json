@@ -1,0 +1,74 @@
+{
+    "name": "schedulepress/wp-schedule-posts",
+    "description": "A complete solution for WordPress Post Schedule.",
+    "authors": [
+        {
+            "name": "wpdevteam"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/priyomukul/wp-notice"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/WPDevelopers/pinterest-api-php"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/WPDevelopers/linkedin-sdk-php"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/wpdevelopers/twitteroauth"
+        }
+    ],
+    "require": {
+        "php": "7.2",
+        "priyomukul/wp-notice": "v2.x-dev",
+        "wpdevelopers/twitteroauth": "dev-main",
+        "wpdevelopers/linkedin-sdk-php": "dev-master",
+        "wpdevelopers/pinterest-api-php": "dev-master",
+        "facebook/graph-sdk": "5.7.0",
+        "guzzlehttp/promises": "1.4.0",
+        "guzzlehttp/psr7": "1.7.0",
+        "paragonie/random_compat": "v9.99.99",
+        "guzzlehttp/guzzle": "6.5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "WPSP\\": "./includes"
+        }
+    },
+    "extra": {
+        "mozart": {
+            "dep_namespace": "WPSP\\Deps\\",
+            "dep_directory": "/includes/Deps/",
+            "classmap_directory": "/includes/Deps/classes/",
+            "classmap_prefix": "WPSP_",
+            "delete_vendor_directories": true,
+            "excluded_packages": [
+                "priyomukul/wp-notice",
+                "wpdevelopers/twitteroauth",
+                "wpdevelopers/linkedin-sdk-php",
+                "wpdevelopers/pinterest-api-php",
+                "facebook/graph-sdk",
+                "paragonie/random_compat"
+            ]
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "7.2"
+        }
+    },
+    "require-dev": {
+        "coenjacobs/mozart": "0.6.0",
+        "phpunit/phpunit": "^8.5"
+    },
+    "scripts": {
+        "test": "@php tests/run-phpunit.php --configuration phpunit.xml",
+        "test:integration": "@php tests/run-phpunit.php --configuration phpunit-integration.xml"
+    }
+}
